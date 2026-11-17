@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gmail: a archives
 // @namespace    https://github.com/balloneij/userscripts
-// @version      1
+// @version      2
 // @downloadURL  https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @updateURL    https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @match        https://mail.google.com/*
@@ -14,14 +14,32 @@
     el instanceof Element &&
     !!el.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], [role="combobox"], [role="searchbox"]');
 
+  const center = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2, empty: r.width === 0 || r.height === 0 };
+  };
+
+  const onTop = (el) => {
+    const { x, y, empty } = center(el);
+    if (empty || x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
+    const hit = document.elementFromPoint(x, y);
+    return !!hit && (hit === el || el.contains(hit));
+  };
+
   const archiveButton = () =>
     [...document.querySelectorAll('[role="button"][data-tooltip^="Archive"], [role="button"][aria-label^="Archive"]')]
-      .find((b) => b.offsetParent && !b.closest('tr') && b.getAttribute('aria-disabled') !== 'true');
+      .find((b) => !b.closest('tr') && b.getAttribute('aria-disabled') !== 'true' && onTop(b));
 
   const press = (el) => {
-    for (const type of ['mouseover', 'mousedown', 'mouseup', 'click']) {
-      el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
-    }
+    const { x, y } = center(el);
+    const at = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, button: 0 };
+    el.dispatchEvent(new PointerEvent('pointerover', at));
+    el.dispatchEvent(new MouseEvent('mouseover', at));
+    el.dispatchEvent(new PointerEvent('pointerdown', { ...at, buttons: 1 }));
+    el.dispatchEvent(new MouseEvent('mousedown', { ...at, buttons: 1 }));
+    el.dispatchEvent(new PointerEvent('pointerup', at));
+    el.dispatchEvent(new MouseEvent('mouseup', at));
+    el.dispatchEvent(new MouseEvent('click', at));
   };
 
   window.addEventListener('keydown', (e) => {
