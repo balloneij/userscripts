@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gmail: a archives
 // @namespace    https://github.com/balloneij/userscripts
-// @version      4
+// @version      5
 // @downloadURL  https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @updateURL    https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @match        https://mail.google.com/*
@@ -27,29 +27,19 @@
   };
 
   const archiveButton = () =>
-    [...document.querySelectorAll('[role="button"][data-tooltip^="Archive"], [role="button"][aria-label^="Archive"]')]
+    [...document.querySelectorAll('[role="button"]:is([data-tooltip^="Archive"], [aria-label^="Archive"], [title^="Archive"])')]
       .find((b) => !b.closest('tr') && b.getAttribute('aria-disabled') !== 'true' && onTop(b));
 
   const press = (el) => {
     const { x, y } = center(el);
     const at = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, button: 0 };
-    const enter = { ...at, bubbles: false, cancelable: false };
-    const mousePointer = { pointerId: 1, pointerType: 'mouse', isPrimary: true };
-    const pointer = (type, init, target = el) => target.dispatchEvent(new PointerEvent(type, { ...init, ...mousePointer }));
-    const mouse = (type, init, target = el) => target.dispatchEvent(new MouseEvent(type, init));
-    const enteredFromBody = [];
-    for (let node = el; node !== document.body; node = node.parentElement) enteredFromBody.unshift(node);
-    pointer('pointerover', at);
-    enteredFromBody.forEach((node) => pointer('pointerenter', enter, node));
-    mouse('mouseover', at);
-    enteredFromBody.forEach((node) => mouse('mouseenter', enter, node));
-    pointer('pointermove', at);
-    mouse('mousemove', at);
-    pointer('pointerdown', { ...at, buttons: 1 });
-    mouse('mousedown', { ...at, buttons: 1 });
-    pointer('pointerup', at);
-    mouse('mouseup', at);
-    mouse('click', at);
+    el.dispatchEvent(new PointerEvent('pointerover', at));
+    el.dispatchEvent(new MouseEvent('mouseover', at));
+    el.dispatchEvent(new PointerEvent('pointerdown', { ...at, buttons: 1 }));
+    el.dispatchEvent(new MouseEvent('mousedown', { ...at, buttons: 1 }));
+    el.dispatchEvent(new PointerEvent('pointerup', at));
+    el.dispatchEvent(new MouseEvent('mouseup', at));
+    el.dispatchEvent(new MouseEvent('click', at));
   };
 
   window.addEventListener('keydown', (e) => {
