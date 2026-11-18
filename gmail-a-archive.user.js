@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gmail: a archives
 // @namespace    https://github.com/balloneij/userscripts
-// @version      3
+// @version      4
 // @downloadURL  https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @updateURL    https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @match        https://mail.google.com/*
@@ -35,12 +35,14 @@
     const at = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, button: 0 };
     const enter = { ...at, bubbles: false, cancelable: false };
     const mousePointer = { pointerId: 1, pointerType: 'mouse', isPrimary: true };
-    const pointer = (type, init) => el.dispatchEvent(new PointerEvent(type, { ...init, ...mousePointer }));
-    const mouse = (type, init) => el.dispatchEvent(new MouseEvent(type, init));
+    const pointer = (type, init, target = el) => target.dispatchEvent(new PointerEvent(type, { ...init, ...mousePointer }));
+    const mouse = (type, init, target = el) => target.dispatchEvent(new MouseEvent(type, init));
+    const enteredFromBody = [];
+    for (let node = el; node !== document.body; node = node.parentElement) enteredFromBody.unshift(node);
     pointer('pointerover', at);
-    pointer('pointerenter', enter);
+    enteredFromBody.forEach((node) => pointer('pointerenter', enter, node));
     mouse('mouseover', at);
-    mouse('mouseenter', enter);
+    enteredFromBody.forEach((node) => mouse('mouseenter', enter, node));
     pointer('pointermove', at);
     mouse('mousemove', at);
     pointer('pointerdown', { ...at, buttons: 1 });
