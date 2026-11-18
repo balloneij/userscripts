@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gmail: a archives
 // @namespace    https://github.com/balloneij/userscripts
-// @version      2
+// @version      3
 // @downloadURL  https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @updateURL    https://raw.githubusercontent.com/balloneij/userscripts/main/gmail-a-archive.user.js
 // @match        https://mail.google.com/*
@@ -33,13 +33,21 @@
   const press = (el) => {
     const { x, y } = center(el);
     const at = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, button: 0 };
-    el.dispatchEvent(new PointerEvent('pointerover', at));
-    el.dispatchEvent(new MouseEvent('mouseover', at));
-    el.dispatchEvent(new PointerEvent('pointerdown', { ...at, buttons: 1 }));
-    el.dispatchEvent(new MouseEvent('mousedown', { ...at, buttons: 1 }));
-    el.dispatchEvent(new PointerEvent('pointerup', at));
-    el.dispatchEvent(new MouseEvent('mouseup', at));
-    el.dispatchEvent(new MouseEvent('click', at));
+    const enter = { ...at, bubbles: false, cancelable: false };
+    const mousePointer = { pointerId: 1, pointerType: 'mouse', isPrimary: true };
+    const pointer = (type, init) => el.dispatchEvent(new PointerEvent(type, { ...init, ...mousePointer }));
+    const mouse = (type, init) => el.dispatchEvent(new MouseEvent(type, init));
+    pointer('pointerover', at);
+    pointer('pointerenter', enter);
+    mouse('mouseover', at);
+    mouse('mouseenter', enter);
+    pointer('pointermove', at);
+    mouse('mousemove', at);
+    pointer('pointerdown', { ...at, buttons: 1 });
+    mouse('mousedown', { ...at, buttons: 1 });
+    pointer('pointerup', at);
+    mouse('mouseup', at);
+    mouse('click', at);
   };
 
   window.addEventListener('keydown', (e) => {
